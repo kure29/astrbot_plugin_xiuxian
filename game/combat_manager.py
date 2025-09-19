@@ -1,4 +1,4 @@
-# combat_manager.py
+# game/combat_manager.py
 
 import asyncio
 import random
@@ -6,9 +6,9 @@ import time
 from typing import Dict, List, Optional, Tuple
 
 from astrbot.api import logger
-from .models import Player, Boss, ActiveWorldBoss
-from . import data_manager
-from .config_manager import config
+from ..data.models import Player, Boss, ActiveWorldBoss
+from ..data import data_manager
+from ..config_manager import config
 from .generators import MonsterGenerator
 
 class BattleManager:
