@@ -1,13 +1,11 @@
-# generators.py
-# 动态内容生成器模块
-
+# game/generators.py
 import random
 import time
 from typing import Dict, Any, List, Optional
 
 from astrbot.api import logger
-from .config_manager import config
-from .models import Monster, Boss, RealmInstance, FloorEvent, Player
+from ..config_manager import config
+from ..data.models import Monster, Boss, RealmInstance, FloorEvent, Player
 
 class MonsterGenerator:
     """基于标签系统的怪物和Boss生成器"""
