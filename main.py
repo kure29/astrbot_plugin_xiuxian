@@ -7,12 +7,13 @@ from astrbot.api import logger
 from astrbot.api.star import Context, Star, register
 from astrbot.api.event import AstrMessageEvent, filter
 
-# --- 核心依赖 ---
-from . import data_manager, xiuxian_logic, combat_manager, realm_manager
+# --- 核心依赖 (路径已更新) ---
+from .data import data_manager
+from .game import xiuxian_logic, combat_manager, realm_manager
 from .config_manager import config
-from .models import Player
+from .data.models import Player
 
-# --- 导入独立的 Handler 类 ---
+# --- 导入独立的 Handler 类 (路径不变) ---
 from .handlers import (
     MiscHandler, PlayerHandler, ShopHandler, SectHandler, 
     CombatHandler, RealmHandler
@@ -64,7 +65,7 @@ class XiuXianPlugin(Star):
         async for r in handler_func(event, player, *args, **kwargs):
             yield r
 
-    # --- 指令委托实现 ---
+    # --- 指令委托实现 (这部分逻辑不变) ---
 
     # Misc Commands
     @filter.command(config.CMD_HELP, "显示帮助信息")
