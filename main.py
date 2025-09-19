@@ -21,10 +21,10 @@ from .handlers import (
 
 @register(
     "astrbot_plugin_xiuxian", 
-    "oldPeter616", 
+    "kure29", 
     "基于astrbot框架的文字修仙游戏", 
     "v2.0.0", 
-    "https://github.com/oldPeter616/astrbot_plugin_xiuxian"
+    "https://github.com/kure29/astrbot_plugin_xiuxian"
 )
 class XiuXianPlugin(Star):
     
