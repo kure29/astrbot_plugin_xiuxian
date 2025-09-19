@@ -1,15 +1,14 @@
-# realm_manager.py
+# game/realm_manager.py
 import asyncio
 import time
 from typing import Tuple, Dict, Any, List
 
-from .models import Player, FloorEvent
-from .config_manager import config
-from .combat_manager import BattleManager # 直接导入类
+from ..data.models import Player, FloorEvent
+from ..config_manager import config
+from .combat_manager import BattleManager # 同在game目录下，路径不变
 from .generators import RealmGenerator, MonsterGenerator
 
 class RealmManager:
-
     def __init__(self):
         # 创建一个 BattleManager 实例，专门用于调用 pve 战斗函数
         self.battle_logic = BattleManager()
