@@ -1,4 +1,4 @@
-# data_manager.py
+# data/data_manager.py
 
 import time
 import aiosqlite
@@ -9,7 +9,7 @@ from dataclasses import fields
 from astrbot.api import logger
 from astrbot.api.star import StarTools
 
-from .config_manager import config
+from ..config_manager import config
 from .models import Player, PlayerEffect, Item, ActiveWorldBoss, Boss
 
 DATA_DIR = StarTools.get_data_dir("xiuxian")
