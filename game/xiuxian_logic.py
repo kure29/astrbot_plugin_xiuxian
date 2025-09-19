@@ -1,13 +1,11 @@
-# xiuxian_logic.py
-# 核心游戏逻辑模块
-
+# game/xiuxian_logic.py
 import random
 import time
 from typing import Tuple, Dict, Any, Optional
 
-from .config_manager import config
-from .models import Player, PlayerEffect
-from . import data_manager
+from ..config_manager import config
+from ..data.models import Player, PlayerEffect
+from ..data import data_manager
 from . import combat_manager
 
 def _calculate_base_stats(level_index: int) -> Dict[str, int]:
