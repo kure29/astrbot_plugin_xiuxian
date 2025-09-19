@@ -51,7 +51,7 @@ class Player:
     @property
     def level(self) -> str:
         # 使用此种方式导入，以避免循环依赖
-        from .config_manager import config
+        from ..config_manager import config 
         if 0 <= self.level_index < len(config.level_data):
             return config.level_data[self.level_index]['level_name']
         return "未知境界"
