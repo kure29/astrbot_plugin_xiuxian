@@ -1,9 +1,9 @@
 # handlers/realm_handler.py
 
 from astrbot.api.event import AstrMessageEvent
-from .. import data_manager
+from ..data import data_manager
 from ..config_manager import config
-from ..models import Player
+from ..data.models import Player
 
 __all__ = ["RealmHandler"]
 
