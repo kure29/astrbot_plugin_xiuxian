@@ -1,5 +1,4 @@
-# models.py
-
+# data/models.py
 import json
 from dataclasses import dataclass, field, replace, asdict
 from typing import Optional, List, Dict, Any
