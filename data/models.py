@@ -1,4 +1,5 @@
 # data/models.py
+
 import json
 from dataclasses import dataclass, field, replace, asdict
 from typing import Optional, List, Dict, Any
@@ -44,6 +45,10 @@ class Player:
     max_hp: int = 100
     attack: int = 10
     defense: int = 5
+    crit_chance: float = 0.05
+    crit_damage: float = 1.5
+    dodge_chance: float = 0.0
+    hit_chance: float = 1.0
     realm_id: Optional[str] = None
     realm_floor: int = 0
     realm_data: Optional[str] = None
@@ -51,7 +56,7 @@ class Player:
     @property
     def level(self) -> str:
         # 使用此种方式导入，以避免循环依赖
-        from ..config_manager import config 
+        from ..config_manager import config
         if 0 <= self.level_index < len(config.level_data):
             return config.level_data[self.level_index]['level_name']
         return "未知境界"
@@ -91,6 +96,10 @@ class Boss:
     max_hp: int
     attack: int
     defense: int
+    crit_chance: float
+    crit_damage: float
+    dodge_chance: float
+    hit_chance: float
     cooldown_minutes: int
     rewards: dict
 
@@ -111,6 +120,10 @@ class Monster:
     max_hp: int
     attack: int
     defense: int
+    crit_chance: float
+    crit_damage: float
+    dodge_chance: float
+    hit_chance: float
     rewards: dict
 
 @dataclass
