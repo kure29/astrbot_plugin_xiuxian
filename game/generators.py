@@ -1,4 +1,6 @@
 # game/generators.py
+# 动态内容生成器模块
+
 import random
 import time
 from typing import Dict, Any, List, Optional
@@ -38,6 +40,8 @@ class MonsterGenerator:
         base_defense = 1 * player_level_index + 4
         base_gold = 3 * player_level_index + 10
         base_exp = 5 * player_level_index + 20
+        base_crit = 0.05 + player_level_index * 0.002
+        base_dodge = 0.02 + player_level_index * 0.001
 
         final_name = template["name"]
         final_hp = base_hp
@@ -45,6 +49,9 @@ class MonsterGenerator:
         final_defense = base_defense
         final_gold = base_gold
         final_exp = base_exp
+        final_crit = base_crit
+        final_dodge = base_dodge
+        
         combined_loot_table = []
 
         for tag_name in template.get("tags", []):
@@ -60,6 +67,8 @@ class MonsterGenerator:
             final_defense *= tag_effect.get("defense_multiplier", 1.0)
             final_gold *= tag_effect.get("gold_multiplier", 1.0)
             final_exp *= tag_effect.get("exp_multiplier", 1.0)
+            final_crit += tag_effect.get("crit_add", 0.0)
+            final_dodge += tag_effect.get("dodge_add", 0.0)
 
             if "add_to_loot" in tag_effect:
                 combined_loot_table.extend(tag_effect["add_to_loot"])
@@ -72,6 +81,10 @@ class MonsterGenerator:
             max_hp=final_hp,
             attack=int(final_attack),
             defense=int(final_defense),
+            crit_chance=final_crit,
+            crit_damage=1.5,
+            dodge_chance=final_dodge,
+            hit_chance=1.0,
             rewards={
                 "gold": int(final_gold),
                 "experience": int(final_exp),
@@ -93,6 +106,8 @@ class MonsterGenerator:
         base_defense = 5 * player_level_index + 20
         base_gold = 50 * player_level_index + 1000
         base_exp = 100 * player_level_index + 2000
+        base_crit = 0.1 + player_level_index * 0.005
+        base_dodge = 0.05 + player_level_index * 0.003
 
         final_name = template["name"]
         final_hp = base_hp
@@ -100,6 +115,9 @@ class MonsterGenerator:
         final_defense = base_defense
         final_gold = base_gold
         final_exp = base_exp
+        final_crit = base_crit
+        final_dodge = base_dodge
+        
         combined_loot_table = []
 
         for tag_name in template.get("tags", []):
@@ -111,6 +129,9 @@ class MonsterGenerator:
             final_defense *= tag_effect.get("defense_multiplier", 1.0)
             final_gold *= tag_effect.get("gold_multiplier", 1.0)
             final_exp *= tag_effect.get("exp_multiplier", 1.0)
+            final_crit += tag_effect.get("crit_add", 0.0)
+            final_dodge += tag_effect.get("dodge_add", 0.0)
+            
             if "add_to_loot" in tag_effect:
                 combined_loot_table.extend(tag_effect["add_to_loot"])
         
@@ -122,6 +143,10 @@ class MonsterGenerator:
             max_hp=final_hp,
             attack=int(final_attack),
             defense=int(final_defense),
+            crit_chance=final_crit,
+            crit_damage=1.5,
+            dodge_chance=final_dodge,
+            hit_chance=1.0,
             cooldown_minutes=template["cooldown_minutes"],
             rewards={
                 "gold": int(final_gold),
