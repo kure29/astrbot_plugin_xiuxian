@@ -7,6 +7,8 @@ from ..data.models import Player
 
 __all__ = ["SectHandler"]
 
+__all__ = ["SectHandler"]
+
 class SectHandler:
     def __init__(self, plugin):
         self.plugin = plugin
