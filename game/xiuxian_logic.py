@@ -11,6 +11,7 @@ from ..data import data_manager
 from . import combat_manager
 
 def _calculate_base_stats(level_index: int) -> Dict[str, Any]:
+    # ... (this function is unchanged) ...
     """根据境界等级计算基础战斗属性"""
     base_hp = 100 + level_index * 50
     base_attack = 10 + level_index * 8
@@ -24,17 +25,22 @@ def _calculate_base_stats(level_index: int) -> Dict[str, Any]:
         "dodge_chance": base_dodge_chance, "hit_chance": 1.0
     }
 
-def generate_new_player_stats(user_id: str) -> Player:
+async def generate_new_player_stats(user_id: str) -> Player: # <-- Changed to async
     """为新玩家生成初始属性"""
+    counter = await data_manager.get_and_increment_player_counter()
+    player_name = f"道友{counter}"
+    
     root = random.choice(config.POSSIBLE_SPIRITUAL_ROOTS)
     initial_stats = _calculate_base_stats(0)
+    
     return Player(
         user_id=user_id,
+        name=player_name,
         spiritual_root=f"{root}灵根",
         gold=config.INITIAL_GOLD,
         **initial_stats
     )
-
+# ... (rest of the file is unchanged) ...
 def handle_check_in(player: Player) -> Tuple[bool, str, Player]:
     """处理签到逻辑"""
     now = time.time()
