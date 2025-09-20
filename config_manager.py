@@ -5,35 +5,38 @@ from pathlib import Path
 from typing import Dict, Any, Tuple, Optional, List
 
 from astrbot.api import logger
-from .data.models import Item
+from .models import Item
 
 class Config:
     def __init__(self, base_dir: Path):
         self._base_dir = base_dir
         self._paths = {
-            "config": base_dir / "config" / "config.json",
-            "level": base_dir / "config" / "level_config.json",
-            "item": base_dir / "config" / "items.json",
-            "boss": base_dir / "config" / "bosses.json",
-            "monster": base_dir / "config" / "monsters.json",
-            "tag": base_dir / "config" / "tags.json"
+            "config": base_dir / "config.json",
+            "level": base_dir / "level_config.json",
+            "item": base_dir / "items.json",
+            "boss": base_dir / "bosses.json",
+            "monster": base_dir / "monsters.json",
+            "realm": base_dir / "realms.json",
+            "tag": base_dir / "tags.json"
         }
 
         self.level_data: List[dict] = []
         self.item_data: Dict[str, Item] = {}
         self.boss_data: Dict[str, dict] = {}
         self.monster_data: Dict[str, dict] = {}
+        self.realm_data: Dict[str, dict] = {}
         self.tag_data: Dict[str, dict] = {}
 
         self.level_map: Dict[str, dict] = {}
         self.item_name_to_id: Dict[str, str] = {}
+        self.realm_name_to_id: Dict[str, str] = {}
         self.boss_name_to_id: Dict[str, str] = {}
 
         # --- 可配置属性 (带默认值) ---
         self.CMD_BOSS_LIST = "查看世界boss"
         self.CMD_FIGHT_BOSS = "讨伐boss"
         self.CMD_START_XIUXIAN = "我要修仙"
-        self.CMD_PLAYER_INFO = "我的信息"
+        self.CMD_PLAYER_INFO = "状态"
         self.CMD_CHECK_IN = "签到"
         self.CMD_START_CULTIVATION = "闭关"
         self.CMD_END_CULTIVATION = "出关"
@@ -50,7 +53,7 @@ class Config:
         self.CMD_ENTER_REALM = "探索秘境"
         self.CMD_REALM_ADVANCE = "前进"
         self.CMD_LEAVE_REALM = "离开秘境"
-        self.CMD_HELP = "修仙帮助"
+        self.CMD_HELP = "帮助"
         
         self.INITIAL_GOLD = 100
         self.CHECK_IN_REWARD_MIN = 50
@@ -102,6 +105,7 @@ class Config:
         raw_item_data = self._load_json_data(self._paths["item"])
         self.boss_data = self._load_json_data(self._paths["boss"])
         self.monster_data = self._load_json_data(self._paths["monster"])
+        self.realm_data = self._load_json_data(self._paths["realm"])
         self.tag_data = self._load_json_data(self._paths["tag"])
 
         self.level_map = {info["level_name"]: {"index": i, **info}
@@ -111,19 +115,24 @@ class Config:
         self.item_name_to_id = {}
         for item_id, info in raw_item_data.items():
             try:
-                # 确保 Item 模型可以从 .data.models 正确导入
                 self.item_data[item_id] = Item(id=item_id, **info)
                 if "name" in info:
                     self.item_name_to_id[info["name"]] = item_id
             except TypeError as e:
                 logger.error(f"加载物品 {item_id} 失败，配置项不匹配: {e}")
 
+        self.realm_name_to_id = {info["name"]: realm_id
+                                 for realm_id, info in self.realm_data.items() if "name" in info}
         self.boss_name_to_id = {info["name"]: boss_id
                                 for boss_id, info in self.boss_data.items() if "name" in info}
 
     def get_item_by_name(self, name: str) -> Optional[Tuple[str, Item]]:
         item_id = self.item_name_to_id.get(name)
         return (item_id, self.item_data[item_id]) if item_id and item_id in self.item_data else None
+
+    def get_realm_by_name(self, name: str) -> Optional[Tuple[str, dict]]:
+        realm_id = self.realm_name_to_id.get(name)
+        return (realm_id, self.realm_data[realm_id]) if realm_id else None
 
     def get_boss_by_name(self, name: str) -> Optional[Tuple[str, dict]]:
         boss_id = self.boss_name_to_id.get(name)
