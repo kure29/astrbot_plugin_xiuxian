@@ -1,8 +1,9 @@
 # handlers/player_handler.py
 from astrbot.api.event import AstrMessageEvent
-from .. import data_manager, xiuxian_logic
+from ..data import data_manager
+from ..game import xiuxian_logic
 from ..config_manager import config
-from ..models import Player
+from ..data.models import Player
 
 __all__ = ["PlayerHandler"]
 
@@ -40,6 +41,9 @@ class PlayerHandler:
             f"生命: {player.hp}/{player.max_hp}\n"
             f"攻击: {player.attack}\n"
             f"防御: {player.defense}\n"
+            f"暴击: {player.crit_chance:.1%}\n"
+            f"爆伤: {player.crit_damage:.0%}\n"
+            f"闪避: {player.dodge_chance:.1%}\n"
             f"--------------------------"
         )
         yield event.plain_result(reply_msg)
