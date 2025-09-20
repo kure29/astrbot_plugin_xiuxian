@@ -1,4 +1,6 @@
 # game/xiuxian_logic.py
+# 核心游戏逻辑模块
+
 import random
 import time
 from typing import Tuple, Dict, Any, Optional
@@ -8,12 +10,19 @@ from ..data.models import Player, PlayerEffect
 from ..data import data_manager
 from . import combat_manager
 
-def _calculate_base_stats(level_index: int) -> Dict[str, int]:
+def _calculate_base_stats(level_index: int) -> Dict[str, Any]:
     """根据境界等级计算基础战斗属性"""
     base_hp = 100 + level_index * 50
     base_attack = 10 + level_index * 8
     base_defense = 5 + level_index * 4
-    return {"hp": base_hp, "max_hp": base_hp, "attack": base_attack, "defense": base_defense}
+    base_crit_chance = 0.05 + level_index * 0.005 # 每级提升0.5%暴击
+    base_dodge_chance = 0.0 + level_index * 0.002 # 每级提升0.2%闪避
+
+    return {
+        "hp": base_hp, "max_hp": base_hp, "attack": base_attack, "defense": base_defense,
+        "crit_chance": base_crit_chance, "crit_damage": 1.5,
+        "dodge_chance": base_dodge_chance, "hit_chance": 1.0
+    }
 
 def generate_new_player_stats(user_id: str) -> Player:
     """为新玩家生成初始属性"""
@@ -101,6 +110,8 @@ def handle_breakthrough(player: Player) -> Tuple[bool, str, Player]:
         player.max_hp = new_stats['max_hp']
         player.attack = new_stats['attack']
         player.defense = new_stats['defense']
+        player.crit_chance = new_stats['crit_chance']
+        player.dodge_chance = new_stats['dodge_chance']
         
         msg = (f"恭喜道友！天降祥瑞，突破成功！\n"
                f"当前境界已达：【{player.level}】\n"
