@@ -7,6 +7,8 @@ from ..data.models import Player
 
 __all__ = ["PlayerHandler"]
 
+__all__ = ["PlayerHandler"]
+
 class PlayerHandler:
     def __init__(self, plugin):
         self.plugin = plugin
