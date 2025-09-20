@@ -16,8 +16,9 @@ DATA_DIR = StarTools.get_data_dir("xiuxian")
 DATA_DIR.mkdir(parents=True, exist_ok=True)
 DB_PATH = DATA_DIR / config.DATABASE_FILE
 
-LATEST_DB_VERSION = 9 # Incremented version from 8 to 9
+LATEST_DB_VERSION = 10 # Incremented version from 9 to 10
 
+# ... (MIGRATION_TASKS, migration decorator, init/close pool functions are the same) ...
 MIGRATION_TASKS: Dict[int, Callable[[aiosqlite.Connection], Awaitable[None]]] = {}
 
 def migration(version: int):
@@ -49,7 +50,7 @@ async def migrate_database():
         if await cursor.fetchone() is None:
             logger.info("未检测到数据库版本，将进行全新安装...")
             await _db_connection.execute("BEGIN")
-            await _create_all_tables_v9(_db_connection)
+            await _create_all_tables_v10(_db_connection)
             await _db_connection.execute("INSERT INTO db_info (version) VALUES (?)", (LATEST_DB_VERSION,))
             await _db_connection.commit()
             logger.info(f"数据库已初始化到最新版本: v{LATEST_DB_VERSION}")
@@ -88,9 +89,15 @@ async def migrate_database():
     else:
         logger.info("数据库结构已是最新。")
 
-async def _create_all_tables_v9(conn: aiosqlite.Connection):
-    """用于全新安装时直接创建最新版（v9）的数据库表结构"""
+async def _create_all_tables_v10(conn: aiosqlite.Connection):
+    """用于全新安装时直接创建最新版（v10）的数据库表结构"""
     await conn.execute("CREATE TABLE IF NOT EXISTS db_info (version INTEGER NOT NULL)")
+    await conn.execute("""
+        CREATE TABLE IF NOT EXISTS game_info (
+            key TEXT PRIMARY KEY,
+            value INTEGER NOT NULL
+        )
+    """)
     await conn.execute("""
         CREATE TABLE IF NOT EXISTS sects (
             id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL UNIQUE,
@@ -100,7 +107,7 @@ async def _create_all_tables_v9(conn: aiosqlite.Connection):
     """)
     await conn.execute("""
         CREATE TABLE IF NOT EXISTS players (
-            user_id TEXT PRIMARY KEY, level_index INTEGER NOT NULL, spiritual_root TEXT NOT NULL,
+            user_id TEXT PRIMARY KEY, name TEXT NOT NULL, level_index INTEGER NOT NULL, spiritual_root TEXT NOT NULL,
             experience INTEGER NOT NULL, gold INTEGER NOT NULL, last_check_in REAL NOT NULL,
             state TEXT NOT NULL, state_start_time REAL NOT NULL, sect_id INTEGER, sect_name TEXT,
             hp INTEGER NOT NULL, max_hp INTEGER NOT NULL, attack INTEGER NOT NULL, defense INTEGER NOT NULL,
@@ -110,6 +117,7 @@ async def _create_all_tables_v9(conn: aiosqlite.Connection):
             FOREIGN KEY (sect_id) REFERENCES sects (id) ON DELETE SET NULL
         )
     """)
+    # ... (rest of the tables are the same) ...
     await conn.execute("""
         CREATE TABLE IF NOT EXISTS inventory (
             id INTEGER PRIMARY KEY AUTOINCREMENT, user_id TEXT NOT NULL, item_id TEXT NOT NULL,
@@ -117,6 +125,7 @@ async def _create_all_tables_v9(conn: aiosqlite.Connection):
             UNIQUE(user_id, item_id)
         )
     """)
+    # 新的世界Boss表结构 (v8)
     await conn.execute("""
         CREATE TABLE IF NOT EXISTS active_world_bosses (
             boss_id TEXT PRIMARY KEY,
@@ -126,6 +135,7 @@ async def _create_all_tables_v9(conn: aiosqlite.Connection):
             level_index INTEGER NOT NULL
         )
     """)
+    # 新的伤害贡献表结构 (v8)
     await conn.execute("""
         CREATE TABLE IF NOT EXISTS world_boss_participants (
             boss_id TEXT NOT NULL,
@@ -137,8 +147,7 @@ async def _create_all_tables_v9(conn: aiosqlite.Connection):
         )
     """)
 
-# ... (Previous migration tasks remain unchanged) ...
-
+# ... (Previous migrations v2-v8 remain the same) ...
 @migration(2)
 async def _upgrade_v1_to_v2(conn: aiosqlite.Connection):
     await conn.execute("PRAGMA foreign_keys = OFF")
@@ -268,6 +277,40 @@ async def _upgrade_v8_to_v9(conn: aiosqlite.Connection):
         await conn.execute("ALTER TABLE players ADD COLUMN hit_chance REAL NOT NULL DEFAULT 1.0")
     logger.info("v8 -> v9 数据库迁移完成！")
 
+
+@migration(10)
+async def _upgrade_v9_to_v10(conn: aiosqlite.Connection):
+    """Adds name to players table and creates game_info table for counters."""
+    logger.info("开始执行 v9 -> v10 数据库迁移 (添加玩家命名)...")
+    cursor = await conn.execute("PRAGMA table_info(players)")
+    columns = [row['name'] for row in await cursor.fetchall()]
+    if 'name' not in columns:
+        await conn.execute("ALTER TABLE players ADD COLUMN name TEXT NOT NULL DEFAULT '无名氏'")
+    
+    await conn.execute("""
+        CREATE TABLE IF NOT EXISTS game_info (
+            key TEXT PRIMARY KEY,
+            value INTEGER NOT NULL
+        )
+    """)
+    await conn.execute("INSERT OR IGNORE INTO game_info (key, value) VALUES ('player_counter', 0)")
+    logger.info("v9 -> v10 数据库迁移完成！")
+
+async def get_and_increment_player_counter() -> int:
+    """Atomically gets and increments the global player counter."""
+    async with _db_connection.execute("BEGIN IMMEDIATE") as conn:
+        cursor = await conn.execute("SELECT value FROM game_info WHERE key = 'player_counter'")
+        row = await cursor.fetchone()
+        current_value = row[0] if row else 0
+        
+        new_value = current_value + 1
+        
+        await conn.execute(
+            "UPDATE game_info SET value = ? WHERE key = 'player_counter'", (new_value,)
+        )
+    # The transaction is automatically committed on exiting the 'with' block
+    return new_value
+# ... (rest of the file is the same) ...
 async def get_active_bosses() -> List[ActiveWorldBoss]:
     async with _db_connection.execute("SELECT * FROM active_world_bosses") as cursor:
         rows = await cursor.fetchall()
