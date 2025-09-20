@@ -27,7 +27,7 @@ class ShopHandler:
     async def handle_backpack(self, event: AstrMessageEvent, player: Player):
         inventory = await data_manager.get_inventory_by_user_id(player.user_id)
         
-        reply_msg = f"--- {event.get_sender_name()} 的背包 ---\n"
+        reply_msg = f"--- {player.name} 的背包 ---\n" # <-- Use new name
         reply_msg += f"灵石: {player.gold}\n"
         reply_msg += "--------------------------\n"
 
@@ -39,7 +39,7 @@ class ShopHandler:
         
         reply_msg += "--------------------------"
         yield event.plain_result(reply_msg)
-
+    # ... (rest of the handler methods are unchanged) ...
     async def handle_buy(self, event: AstrMessageEvent, item_name: str, quantity: int, player: Player):
         if player.state != '空闲':
             yield event.plain_result(f"道友当前正在「{player.state}」中，无法分心购物。")
@@ -64,6 +64,7 @@ class ShopHandler:
             if updated_player:
                 yield event.plain_result(f"购买成功！花费{total_cost}灵石，购得「{item_name}」x{quantity}。剩余灵石 {updated_player.gold}。")
             else:
+                # 极端情况下的回退
                 yield event.plain_result(f"购买成功！花费{total_cost}灵石，购得「{item_name}」x{quantity}。")
         else:
             if reason == "ERROR_INSUFFICIENT_FUNDS":
