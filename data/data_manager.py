@@ -16,7 +16,7 @@ DATA_DIR = StarTools.get_data_dir("xiuxian")
 DATA_DIR.mkdir(parents=True, exist_ok=True)
 DB_PATH = DATA_DIR / config.DATABASE_FILE
 
-LATEST_DB_VERSION = 8
+LATEST_DB_VERSION = 9 # Incremented version from 8 to 9
 
 MIGRATION_TASKS: Dict[int, Callable[[aiosqlite.Connection], Awaitable[None]]] = {}
 
@@ -49,8 +49,7 @@ async def migrate_database():
         if await cursor.fetchone() is None:
             logger.info("未检测到数据库版本，将进行全新安装...")
             await _db_connection.execute("BEGIN")
-            # 注意：全新安装直接创建 v8 结构
-            await _create_all_tables_v8(_db_connection)
+            await _create_all_tables_v9(_db_connection)
             await _db_connection.execute("INSERT INTO db_info (version) VALUES (?)", (LATEST_DB_VERSION,))
             await _db_connection.commit()
             logger.info(f"数据库已初始化到最新版本: v{LATEST_DB_VERSION}")
@@ -89,8 +88,8 @@ async def migrate_database():
     else:
         logger.info("数据库结构已是最新。")
 
-async def _create_all_tables_v8(conn: aiosqlite.Connection):
-    """用于全新安装时直接创建最新版（v8）的数据库表结构"""
+async def _create_all_tables_v9(conn: aiosqlite.Connection):
+    """用于全新安装时直接创建最新版（v9）的数据库表结构"""
     await conn.execute("CREATE TABLE IF NOT EXISTS db_info (version INTEGER NOT NULL)")
     await conn.execute("""
         CREATE TABLE IF NOT EXISTS sects (
@@ -105,6 +104,8 @@ async def _create_all_tables_v8(conn: aiosqlite.Connection):
             experience INTEGER NOT NULL, gold INTEGER NOT NULL, last_check_in REAL NOT NULL,
             state TEXT NOT NULL, state_start_time REAL NOT NULL, sect_id INTEGER, sect_name TEXT,
             hp INTEGER NOT NULL, max_hp INTEGER NOT NULL, attack INTEGER NOT NULL, defense INTEGER NOT NULL,
+            crit_chance REAL NOT NULL DEFAULT 0.05, crit_damage REAL NOT NULL DEFAULT 1.5,
+            dodge_chance REAL NOT NULL DEFAULT 0.0, hit_chance REAL NOT NULL DEFAULT 1.0,
             realm_id TEXT, realm_floor INTEGER NOT NULL DEFAULT 0, realm_data TEXT,
             FOREIGN KEY (sect_id) REFERENCES sects (id) ON DELETE SET NULL
         )
@@ -116,7 +117,6 @@ async def _create_all_tables_v8(conn: aiosqlite.Connection):
             UNIQUE(user_id, item_id)
         )
     """)
-    # 新的世界Boss表结构 (v8)
     await conn.execute("""
         CREATE TABLE IF NOT EXISTS active_world_bosses (
             boss_id TEXT PRIMARY KEY,
@@ -126,7 +126,6 @@ async def _create_all_tables_v8(conn: aiosqlite.Connection):
             level_index INTEGER NOT NULL
         )
     """)
-    # 新的伤害贡献表结构 (v8)
     await conn.execute("""
         CREATE TABLE IF NOT EXISTS world_boss_participants (
             boss_id TEXT NOT NULL,
@@ -137,6 +136,8 @@ async def _create_all_tables_v8(conn: aiosqlite.Connection):
             FOREIGN KEY (user_id) REFERENCES players (user_id) ON DELETE CASCADE
         )
     """)
+
+# ... (Previous migration tasks remain unchanged) ...
 
 @migration(2)
 async def _upgrade_v1_to_v2(conn: aiosqlite.Connection):
@@ -250,6 +251,22 @@ async def _upgrade_v7_to_v8(conn: aiosqlite.Connection):
         )
     """)
     logger.info("v7 -> v8 数据库迁移完成！")
+
+@migration(9)
+async def _upgrade_v8_to_v9(conn: aiosqlite.Connection):
+    """Adds crit_chance, crit_damage, dodge_chance, and hit_chance to the players table."""
+    logger.info("开始执行 v8 -> v9 数据库迁移 (添加战斗属性)...")
+    cursor = await conn.execute("PRAGMA table_info(players)")
+    columns = [row['name'] for row in await cursor.fetchall()]
+    if 'crit_chance' not in columns:
+        await conn.execute("ALTER TABLE players ADD COLUMN crit_chance REAL NOT NULL DEFAULT 0.05")
+    if 'crit_damage' not in columns:
+        await conn.execute("ALTER TABLE players ADD COLUMN crit_damage REAL NOT NULL DEFAULT 1.5")
+    if 'dodge_chance' not in columns:
+        await conn.execute("ALTER TABLE players ADD COLUMN dodge_chance REAL NOT NULL DEFAULT 0.0")
+    if 'hit_chance' not in columns:
+        await conn.execute("ALTER TABLE players ADD COLUMN hit_chance REAL NOT NULL DEFAULT 1.0")
+    logger.info("v8 -> v9 数据库迁移完成！")
 
 async def get_active_bosses() -> List[ActiveWorldBoss]:
     async with _db_connection.execute("SELECT * FROM active_world_bosses") as cursor:
