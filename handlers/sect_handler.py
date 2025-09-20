@@ -12,6 +12,10 @@ class SectHandler:
         self.plugin = plugin
 
     async def handle_create_sect(self, event: AstrMessageEvent, sect_name: str, player: Player):
+        if player.state != '空闲':
+            yield event.plain_result(f"道友当前正在「{player.state}」中，无法开宗立派。")
+            return
+
         if not sect_name:
             yield event.plain_result(f"指令格式错误！请使用「{config.CMD_CREATE_SECT} <宗门名称>」。")
             return
@@ -22,6 +26,10 @@ class SectHandler:
         yield event.plain_result(msg)
 
     async def handle_join_sect(self, event: AstrMessageEvent, sect_name: str, player: Player):
+        if player.state != '空闲':
+            yield event.plain_result(f"道友当前正在「{player.state}」中，无法加入宗门。")
+            return
+
         if not sect_name:
             yield event.plain_result(f"指令格式错误！请使用「{config.CMD_JOIN_SECT} <宗门名称>」。")
             return
@@ -32,6 +40,10 @@ class SectHandler:
         yield event.plain_result(msg)
 
     async def handle_leave_sect(self, event: AstrMessageEvent, player: Player):
+        if player.state != '空闲':
+            yield event.plain_result(f"道友当前正在「{player.state}」中，无法退出宗门。")
+            return
+            
         success, msg, updated_player = await xiuxian_logic.handle_leave_sect(player)
         if success and updated_player:
             await data_manager.update_player(updated_player)
