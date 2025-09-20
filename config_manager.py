@@ -10,6 +10,7 @@ from .data.models import Item
 class Config:
     def __init__(self, base_dir: Path):
         self._base_dir = base_dir
+        # This assumes you have moved the json files into a 'config' sub-directory
         self._paths = {
             "config": base_dir / "config" / "config.json",
             "level": base_dir / "config" / "level_config.json",
