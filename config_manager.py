@@ -5,19 +5,20 @@ from pathlib import Path
 from typing import Dict, Any, Tuple, Optional, List
 
 from astrbot.api import logger
-from .models import Item
+from .data.models import Item  # <-- CORRECTED IMPORT PATH
 
 class Config:
     def __init__(self, base_dir: Path):
         self._base_dir = base_dir
+        # This assumes you have moved the json files into a 'config' sub-directory
         self._paths = {
-            "config": base_dir / "config.json",
-            "level": base_dir / "level_config.json",
-            "item": base_dir / "items.json",
-            "boss": base_dir / "bosses.json",
-            "monster": base_dir / "monsters.json",
-            "realm": base_dir / "realms.json",
-            "tag": base_dir / "tags.json"
+            "config": base_dir / "config" / "config.json",
+            "level": base_dir / "config" / "level_config.json",
+            "item": base_dir / "config" / "items.json",
+            "boss": base_dir / "config" / "bosses.json",
+            "monster": base_dir / "config" / "monsters.json",
+            "realm": base_dir / "config" / "realms.json",
+            "tag": base_dir / "config" / "tags.json"
         }
 
         self.level_data: List[dict] = []
