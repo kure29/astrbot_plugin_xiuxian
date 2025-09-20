@@ -37,9 +37,9 @@ class PlayerHandler:
             f"{sect_info}\n"
             f"状态：{player.state}\n"
             "--- 战斗属性 ---\n"
-            f"❤️生命: {player.hp}/{player.max_hp}\n"
-            f"⚔️攻击: {player.attack}\n"
-            f"🛡️防御: {player.defense}\n"
+            f"生命: {player.hp}/{player.max_hp}\n"
+            f"攻击: {player.attack}\n"
+            f"防御: {player.defense}\n"
             f"--------------------------"
         )
         yield event.plain_result(reply_msg)
