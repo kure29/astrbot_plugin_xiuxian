@@ -4,6 +4,7 @@ import json
 from dataclasses import dataclass, field, replace, asdict
 from typing import Optional, List, Dict, Any
 
+# ... (Item, FloorEvent, RealmInstance dataclasses remain the same) ...
 @dataclass
 class Item:
     """物品数据模型"""
@@ -28,10 +29,12 @@ class RealmInstance:
     total_floors: int
     floors: List[FloorEvent]
 
+
 @dataclass
 class Player:
     """玩家数据模型"""
     user_id: str
+    name: str = "无名氏"  # <-- 新增字段
     level_index: int = 0  
     spiritual_root: str = "未知"
     experience: int = 0
@@ -80,7 +83,7 @@ class Player:
 
     def clone(self) -> 'Player':
         return replace(self)
-
+# ... (rest of the file remains the same) ...
 @dataclass
 class PlayerEffect:
     experience: int = 0
