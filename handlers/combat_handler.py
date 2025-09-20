@@ -2,10 +2,9 @@
 
 from astrbot.api.event import AstrMessageEvent
 from astrbot.core.message.components import At
-from ..data import data_manager
-from ..game import xiuxian_logic
+from .. import data_manager, xiuxian_logic
 from ..config_manager import config
-from ..data.models import Player
+from ..models import Player
 
 __all__ = ["CombatHandler"]
 
@@ -65,7 +64,7 @@ class CombatHandler:
         for instance, template in active_bosses_with_templates:
             report.append(
                 f"【{template.name}】 (ID: {instance.boss_id})\n"
-                f"  ❤️剩余生命: {instance.current_hp}/{instance.max_hp}"
+                f"  剩余生命: {instance.current_hp}/{instance.max_hp}"
             )
             participants = await data_manager.get_boss_participants(instance.boss_id)
             if participants:
