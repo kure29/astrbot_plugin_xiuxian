@@ -1,9 +1,8 @@
 # handlers/player_handler.py
 from astrbot.api.event import AstrMessageEvent
-from ..data import data_manager
-from ..game import xiuxian_logic
+from .. import data_manager, xiuxian_logic
 from ..config_manager import config
-from ..data.models import Player
+from ..models import Player
 
 __all__ = ["PlayerHandler"]
 
