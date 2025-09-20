@@ -26,17 +26,25 @@ class ShopHandler:
 
     async def handle_backpack(self, event: AstrMessageEvent, player: Player):
         inventory = await data_manager.get_inventory_by_user_id(player.user_id)
-        if not inventory:
-            yield event.plain_result("道友的背包空空如也。")
-            return
-
+        
         reply_msg = f"--- {event.get_sender_name()} 的背包 ---\n"
-        for item in inventory:
-            reply_msg += f"【{item['name']}】x{item['quantity']} - {item['description']}\n"
+        reply_msg += f"灵石: {player.gold}\n"
+        reply_msg += "--------------------------\n"
+
+        if not inventory:
+            reply_msg += "背包空空如也。\n"
+        else:
+            for item in inventory:
+                reply_msg += f"【{item['name']}】x{item['quantity']} - {item['description']}\n"
+        
         reply_msg += "--------------------------"
         yield event.plain_result(reply_msg)
 
-    async def handle_buy(self, event: AstrMessageEvent, item_name: str, quantity: int, player: Player):        
+    async def handle_buy(self, event: AstrMessageEvent, item_name: str, quantity: int, player: Player):
+        if player.state != '空闲':
+            yield event.plain_result(f"道友当前正在「{player.state}」中，无法分心购物。")
+            return
+
         if not item_name or quantity <= 0:
             yield event.plain_result(f"指令格式错误。正确用法: `{config.CMD_BUY} <物品名> [数量]`。")
             return
@@ -56,7 +64,6 @@ class ShopHandler:
             if updated_player:
                 yield event.plain_result(f"购买成功！花费{total_cost}灵石，购得「{item_name}」x{quantity}。剩余灵石 {updated_player.gold}。")
             else:
-                # 极端情况下的回退
                 yield event.plain_result(f"购买成功！花费{total_cost}灵石，购得「{item_name}」x{quantity}。")
         else:
             if reason == "ERROR_INSUFFICIENT_FUNDS":
@@ -65,6 +72,10 @@ class ShopHandler:
                 yield event.plain_result("购买失败，坊市交易繁忙，请稍后再试。")
 
     async def handle_use(self, event: AstrMessageEvent, item_name: str, quantity: int, player: Player):
+        if player.state != '空闲':
+            yield event.plain_result(f"道友当前正在「{player.state}」中，无法使用物品。")
+            return
+
         if not item_name or quantity <= 0:
             yield event.plain_result(f"指令格式错误。正确用法: `{config.CMD_USE_ITEM} <物品名> [数量]`。")
             return
