@@ -14,6 +14,10 @@ class CombatHandler:
         self.plugin = plugin
 
     async def handle_spar(self, event: AstrMessageEvent, player: Player):
+        if player.state != '空闲':
+            yield event.plain_result(f"道友当前正在「{player.state}」中，无法与人切磋。")
+            return
+            
         attacker = player
         if attacker.hp < attacker.max_hp:
             yield event.plain_result("你当前气血不满，无法与人切磋，请先恢复。")
@@ -78,6 +82,10 @@ class CombatHandler:
 
     async def handle_fight_boss(self, event: AstrMessageEvent, player: Player, boss_id: str, player_name: str):
         """处理讨伐世界Boss的指令"""
+        if player.state != '空闲':
+            yield event.plain_result(f"道友当前正在「{player.state}」中，无法讨伐Boss。")
+            return
+
         if not boss_id:
             yield event.plain_result(f"指令格式错误！请使用「{config.CMD_FIGHT_BOSS} <Boss ID>」。")
             return
