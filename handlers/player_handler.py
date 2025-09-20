@@ -7,8 +7,6 @@ from ..data.models import Player
 
 __all__ = ["PlayerHandler"]
 
-__all__ = ["PlayerHandler"]
-
 class PlayerHandler:
     def __init__(self, plugin):
         self.plugin = plugin
@@ -19,10 +17,10 @@ class PlayerHandler:
             yield event.plain_result("道友，你已踏入仙途，无需重复此举。")
             return
 
-        new_player = xiuxian_logic.generate_new_player_stats(user_id)
+        new_player = await xiuxian_logic.generate_new_player_stats(user_id) # <-- await here
         await data_manager.create_player(new_player)
         reply_msg = (
-            f"恭喜道友 {event.get_sender_name()} 踏上仙途！\n"
+            f"恭喜 {new_player.name} 踏上仙途！\n" # <-- Use new name
             f"初始灵根：【{new_player.spiritual_root}】\n"
             f"启动资金：【{new_player.gold}】灵石\n"
             f"发送「{config.CMD_PLAYER_INFO}」查看状态，「{config.CMD_CHECK_IN}」领取福利！"
@@ -32,7 +30,7 @@ class PlayerHandler:
     async def handle_player_info(self, event: AstrMessageEvent, player: Player):
         sect_info = f"宗门：{player.sect_name if player.sect_name else '逍遥散人'}"
         reply_msg = (
-            f"--- 道友 {event.get_sender_name()} 的信息 ---\n"
+            f"--- {player.name} 的信息 ---\n" # <-- Use new name
             f"境界：{player.level}\n"
             f"灵根：{player.spiritual_root}\n"
             f"修为：{player.experience}\n"
@@ -50,6 +48,7 @@ class PlayerHandler:
         )
         yield event.plain_result(reply_msg)
 
+    # ... (rest of the handler methods are unchanged) ...
     async def handle_check_in(self, event: AstrMessageEvent, player: Player):
         success, msg, updated_player = xiuxian_logic.handle_check_in(player)
         if success:
