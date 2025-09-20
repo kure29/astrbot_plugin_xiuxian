@@ -1,4 +1,4 @@
-# combat_manager.py
+# game/combat_manager.py
 
 import asyncio
 import random
@@ -6,9 +6,9 @@ import time
 from typing import Dict, List, Optional, Tuple
 
 from astrbot.api import logger
-from .models import Player, Boss, ActiveWorldBoss
-from . import data_manager
-from .config_manager import config
+from ..data.models import Player, Boss, ActiveWorldBoss
+from ..data import data_manager
+from ..config_manager import config
 from .generators import MonsterGenerator
 
 class BattleManager:
@@ -69,7 +69,15 @@ class BattleManager:
 
         while p_clone.hp > 1 and boss_hp > 0 and turn < max_turns:
             turn += 1
-            damage_to_boss = max(1, p_clone.attack - boss.defense)
+            # 玩家攻击
+            final_dodge_chance = max(0, boss.dodge_chance - p_clone.hit_chance)
+            if random.random() < final_dodge_chance:
+                damage_to_boss = 0
+            else:
+                damage_to_boss = max(1, p_clone.attack - boss.defense)
+                if random.random() < p_clone.crit_chance:
+                    damage_to_boss = int(damage_to_boss * p_clone.crit_damage)
+            
             damage_to_boss = min(damage_to_boss, boss_hp)
             boss_hp -= damage_to_boss
             total_damage_dealt += damage_to_boss
@@ -77,7 +85,15 @@ class BattleManager:
             if boss_hp <= 0:
                 break
 
-            damage_to_player = max(1, boss.attack - p_clone.defense)
+            # Boss攻击
+            final_dodge_chance = max(0, p_clone.dodge_chance - boss.hit_chance)
+            if random.random() < final_dodge_chance:
+                damage_to_player = 0
+            else:
+                damage_to_player = max(1, boss.attack - p_clone.defense)
+                if random.random() < boss.crit_chance:
+                    damage_to_player = int(damage_to_player * boss.crit_damage)
+
             p_clone.hp -= damage_to_player
             total_damage_taken += damage_to_player
         
@@ -140,17 +156,42 @@ class BattleManager:
         total_damage_dealt = 0
         total_damage_taken = 0
         turn = 0
+        combat_log = []
         
         while p_clone.hp > 1 and monster_hp > 0:
             turn += 1
-            damage_to_monster = max(1, p_clone.attack - monster.defense)
+            # 玩家攻击回合
+            final_dodge_chance = max(0, monster.dodge_chance - p_clone.hit_chance)
+            if random.random() < final_dodge_chance:
+                damage_to_monster = 0
+                combat_log.append(f"【{monster.name}】闪避了你的攻击！")
+            else:
+                damage_to_monster = max(1, p_clone.attack - monster.defense)
+                if random.random() < p_clone.crit_chance:
+                    damage_to_monster = int(damage_to_monster * p_clone.crit_damage)
+                    combat_log.append(f"你对【{monster.name}】造成了 {damage_to_monster} 点会心一击！")
+                else:
+                    combat_log.append(f"你对【{monster.name}】造成了 {damage_to_monster} 点伤害。")
+            
             monster_hp -= damage_to_monster
             total_damage_dealt += damage_to_monster
             
             if monster_hp <= 0:
                 break
 
-            damage_to_player = max(1, monster.attack - p_clone.defense)
+            # 怪物攻击回合
+            final_dodge_chance = max(0, p_clone.dodge_chance - monster.hit_chance)
+            if random.random() < final_dodge_chance:
+                damage_to_player = 0
+                combat_log.append("你成功闪避了攻击！")
+            else:
+                damage_to_player = max(1, monster.attack - p_clone.defense)
+                if random.random() < monster.crit_chance:
+                    damage_to_player = int(damage_to_player * monster.crit_damage)
+                    combat_log.append(f"【{monster.name}】对你造成了 {damage_to_player} 点会心一击！")
+                else:
+                    combat_log.append(f"【{monster.name}】对你造成了 {damage_to_player} 点伤害。")
+
             p_clone.hp -= damage_to_player
             total_damage_taken += damage_to_player
 
@@ -186,14 +227,30 @@ def player_vs_player(attacker: Player, defender: Player, attacker_name: Optional
     
     while p1.hp > 1 and p2.hp > 1 and turn < max_turns:
         turn += 1
-        damage_to_p2 = max(1, p1.attack - p2.defense)
+        # P1 攻击 P2
+        final_dodge_chance_p2 = max(0, p2.dodge_chance - p1.hit_chance)
+        if random.random() < final_dodge_chance_p2:
+            damage_to_p2 = 0
+        else:
+            damage_to_p2 = max(1, p1.attack - p2.defense)
+            if random.random() < p1.crit_chance:
+                damage_to_p2 = int(damage_to_p2 * p1.crit_damage)
+
         p2.hp -= damage_to_p2
         p1_damage_dealt += damage_to_p2
         if p2.hp <= 1:
             p2.hp = 1
             break
 
-        damage_to_p1 = max(1, p2.attack - p1.defense)
+        # P2 攻击 P1
+        final_dodge_chance_p1 = max(0, p1.dodge_chance - p2.hit_chance)
+        if random.random() < final_dodge_chance_p1:
+            damage_to_p1 = 0
+        else:
+            damage_to_p1 = max(1, p2.attack - p1.defense)
+            if random.random() < p2.crit_chance:
+                damage_to_p1 = int(damage_to_p1 * p2.crit_damage)
+
         p1.hp -= damage_to_p1
         p2_damage_dealt += damage_to_p1
         if p1.hp <= 1:
