@@ -1,4 +1,4 @@
-# game/combat_manager.py
+# combat_manager.py
 
 import asyncio
 import random
@@ -6,9 +6,9 @@ import time
 from typing import Dict, List, Optional, Tuple
 
 from astrbot.api import logger
-from ..data.models import Player, Boss, ActiveWorldBoss
-from ..data import data_manager
-from ..config_manager import config
+from .models import Player, Boss, ActiveWorldBoss
+from . import data_manager
+from .config_manager import config
 from .generators import MonsterGenerator
 
 class BattleManager:
@@ -86,9 +86,9 @@ class BattleManager:
 
         combat_summary = [f"你向【{boss.name}】发起了挑战！", "……激战过后……"]
         if p_clone.hp <= 1 and boss_hp > 0:
-            combat_summary.append("✗ 你不敌妖兽，力竭倒下！")
+            combat_summary.append("挑战失败！你不敌妖兽，力竭倒下！")
         else:
-            combat_summary.append("✓ 你坚持到了最后！")
+            combat_summary.append("挑战成功！你坚持到了最后！")
 
         combat_summary.append(f"- 战斗历时: {turn}回合")
         combat_summary.append(f"- 总计伤害: {total_damage_dealt}点")
@@ -161,9 +161,9 @@ class BattleManager:
 
         combat_summary = [f"你遭遇了【{monster.name}】！", "……激战过后……"]
         if victory:
-            combat_summary.append("✓ 你获得了胜利！")
+            combat_summary.append("你获得了胜利！")
         else:
-            combat_summary.append("✗ 你不敌对手，力竭倒下！")
+            combat_summary.append("你不敌对手，力竭倒下！")
 
         combat_summary.append(f"- 战斗历时: {turn}回合")
         combat_summary.append(f"- 总计伤害: {total_damage_dealt}点")
@@ -200,20 +200,20 @@ def player_vs_player(attacker: Player, defender: Player, attacker_name: Optional
             p1.hp = 1
             break
             
-    combat_summary = [f"⚔️【切磋】{p1_display} vs {p2_display}", "……一番激斗……"]
+    combat_summary = [f"【切磋】{p1_display} vs {p2_display}", "……一番激斗……"]
     
     winner = None
     winner_display = ""
     if p1.hp <= 1:
         winner = defender
         winner_display = p2_display
-        combat_summary.append(f"🏆 {winner_display} 技高一筹，获得了胜利！")
+        combat_summary.append(f"{winner_display} 技高一筹，获得了胜利！")
     elif p2.hp <= 1:
         winner = attacker
         winner_display = p1_display
-        combat_summary.append(f"🏆 {winner_display} 技高一筹，获得了胜利！")
+        combat_summary.append(f"{winner_display} 技高一筹，获得了胜利！")
     else:
-        combat_summary.append("平【平局】双方大战三十回合，未分胜负！")
+        combat_summary.append("【平局】双方大战三十回合，未分胜负！")
 
     combat_summary.append(f"\n--- {p1_display} 战报 ---")
     combat_summary.append(f"- 总计伤害: {p1_damage_dealt}点")
