@@ -12,12 +12,20 @@ class RealmHandler:
         self.plugin = plugin
 
     async def handle_enter_realm(self, event: AstrMessageEvent, player: Player):
+        if player.state != '空闲':
+            yield event.plain_result(f"道友当前正在「{player.state}」中，无法进入秘境。")
+            return
+            
         success, msg, updated_player = await self.plugin.realm_manager.start_session(player)
         if success:
             await data_manager.update_player(updated_player)
         yield event.plain_result(msg)
 
     async def handle_realm_advance(self, event: AstrMessageEvent, player: Player):
+        if player.state != '空闲':
+            yield event.plain_result(f"道友当前正在「{player.state}」中，无法在秘境中前进。")
+            return
+
         if not player.realm_id:
             yield event.plain_result("你不在任何秘境中，无法前进。")
             return
@@ -43,7 +51,6 @@ class RealmHandler:
             yield event.plain_result("你不在任何秘境中。")
             return
 
-        # 动态获取秘境名称
         realm_instance = player.get_realm_instance()
         realm_name = f"{player.level}修士的试炼" if realm_instance else "未知的秘境"
 
