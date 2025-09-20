@@ -5,12 +5,11 @@ from pathlib import Path
 from typing import Dict, Any, Tuple, Optional, List
 
 from astrbot.api import logger
-from .data.models import Item  # <-- CORRECTED IMPORT PATH
+from .data.models import Item
 
 class Config:
     def __init__(self, base_dir: Path):
         self._base_dir = base_dir
-        # This assumes you have moved the json files into a 'config' sub-directory
         self._paths = {
             "config": base_dir / "config" / "config.json",
             "level": base_dir / "config" / "level_config.json",
@@ -44,7 +43,7 @@ class Config:
         self.CMD_BREAKTHROUGH = "突破"
         self.CMD_SHOP = "商店"
         self.CMD_BUY = "购买"
-        self.CMD_BACKPACK = "我的背包"
+        self.CMD_BACKPACK = "背包"
         self.CMD_CREATE_SECT = "创建宗门"
         self.CMD_JOIN_SECT = "加入宗门"
         self.CMD_MY_SECT = "我的宗门"
